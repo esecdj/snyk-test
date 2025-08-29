@@ -12,8 +12,8 @@ jobs:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       CONCURRENT_IMPORTS: ${{ secrets.CONCURRENT_IMPORTS }}
       SNYK_LOG_PATH: ${{ secrets.SNYK_LOG_PATH }}
-      FILE_NAME: "test.json"
-      FILE_DATA: "json sample"
+      FILE_NAME: ${{ secrets.FILE_NAME }}
+      FILE_DATA: ${{ secrets.FILE_DATA }}
       
     steps:    
     - name: Create File
@@ -29,6 +29,6 @@ jobs:
          
     - name: Run Snyk Import
       run: |
-         cat test.json
+         cat import.json
          echo ${{ github.event.repository.default_branch }}
          DEBUG=snyk* snyk-api-import import --file=import-projects.json
