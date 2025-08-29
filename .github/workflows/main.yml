@@ -29,6 +29,6 @@ jobs:
          
     - name: Run Snyk Import
       run: |
-         pwd
-         cat import-projects.json
+         echo ${{ github.event.repository.name }}
+         echo ${{ github.event.repository.owner.name }}
          DEBUG=snyk* snyk-api-import import --file=import-projects.json
