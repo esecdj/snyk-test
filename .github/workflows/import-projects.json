@@ -6,7 +6,7 @@
       "target": {
         "name": "snyk-test",
         "owner": "esecdj",
-        "branch": "main"
+        "branch": ${{ github.event.repository.default_branch }}
       }
     }
   ]
