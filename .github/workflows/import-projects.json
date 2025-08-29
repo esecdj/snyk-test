@@ -4,8 +4,8 @@
       "orgId": "6f7a06dd-570e-491d-8317-797f82f7fde2",
       "integrationId": "bc7e9559-30b3-4cf3-ac80-8b2e84262ed6",
       "target": {
-        "name": "snyk-test",
-        "owner": "esecdj",
+        "name": "${{ github.event.repository.name }}",
+        "owner": "${{ github.event.repository.owner.name }}",
         "branch": "${{ github.event.repository.default_branch }}"
       }
     }
