@@ -13,7 +13,7 @@ jobs:
       CONCURRENT_IMPORTS: ${{ secrets.CONCURRENT_IMPORTS }}
       SNYK_LOG_PATH: ${{ secrets.SNYK_LOG_PATH }}
       FILE_NAME: ${{ secrets.FILE_NAME }}
-      FILE_DATA: ${{ env.FILE_DATA }}
+      FILE_DATA: ${{ vars.FILE_DATA }}
       
     steps:    
     - name: Create File
