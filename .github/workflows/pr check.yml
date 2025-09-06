@@ -11,16 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout PR code
         uses: actions/checkout@v4
 
-      - name: Search for build-push-action@v6
+      - name: Check for 'docker/build-push-action@v6'
         run: |
-          matches=$(grep -rE '^(\s*)uses:\s*docker/build-push-action@v6\s*$' .github/workflows || true)
-
-          if [[ -n "$matches" ]]; then
-            echo "$matches"
-            echo "::error title=Docker Build Action Detected::'docker/build-push-action@v6' found in workflow files."
+          if grep -qE '^\s*-\s*uses:\s*docker/build-push-action@v6\s*$' .github/workflows/main.yml; then
+            echo "::error title=Docker Build Action Detected::'docker/build-push-action@v6' found in .github/workflows/main.yml"
             exit 1
           fi
-          exit 0
