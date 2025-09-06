@@ -1,0 +1,25 @@
+# .github/workflows/monitor-docker-build-usage.yml
+name: Detect Docker Build Action Usage
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  detect-docker-build-action:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Search for build-push-action@v6
+        run: |
+          matches=$(grep -rE '^(\s*)uses:\s*docker/build-push-action@v6\s*$' .github/workflows || true)
+
+          if [[ -n "$matches" ]]; then
+            echo "$matches"
+            echo "::error title=Docker Build Action Detected::'docker/build-push-action@v6' found in workflow files."
+            exit 1
+          fi
