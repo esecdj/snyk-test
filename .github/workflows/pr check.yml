@@ -4,7 +4,7 @@ name: Detect Docker Build Action Usage
 on:
   pull_request:
     paths:
-      - '.github/workflows/main.yml'
+      - '.github/workflows/**'
 
 jobs:
   detect-docker-build-action:
