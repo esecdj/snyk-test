@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        
 
       - uses: GrantBirki/git-diff-action@v2.8.1
         id: git-diff-action
