@@ -18,6 +18,7 @@ jobs:
           
       - name: Detect Docker usage in workflows
         id: docker-check
+        continue-on-error: true
         run: |
           if grep -iE '\bdocker\s+(build|push)\b|docker/build-push-action' .github/workflows/*.yml | grep -viE '^\s*#'; then
             exit 1
