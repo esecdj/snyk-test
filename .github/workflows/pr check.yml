@@ -4,7 +4,7 @@ name: Detect Docker Build Action Usage
 on:
   pull_request:
     paths:
-      - '.github/workflows/main.yml'
+      - '.github/workflows/**'
 
 jobs:
   detect-docker-build-action:
@@ -14,9 +14,18 @@ jobs:
       - name: Checkout PR code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0        
-
+          fetch-depth: 0   
+          
+      - name: Detect Docker usage in workflows
+        id: docker-check
+        continue-on-error: true
+        run: |
+          if grep -hiE '\bdocker\s+push\b|docker/build-push-action' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
+            exit 1
+          fi
+          
       - uses: GrantBirki/git-diff-action@v2.8.1
+        if: steps.docker-check.outcome == 'failure'
         id: git-diff-action
         with:
           json_diff_file_output: diff.json
@@ -25,6 +34,7 @@ jobs:
 
       # Print the diff in JSON format
       - name: print json diff
+        if: steps.docker-check.outcome == 'failure'
         env:
           DIFF: ${{ steps.git-diff-action.outputs.json-diff-path }}
         run: jq . "$DIFF"      
