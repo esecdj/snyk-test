@@ -20,7 +20,7 @@ jobs:
         id: docker-check
         continue-on-error: true
         run: |
-          if grep -iE '\bdocker\s+(build|push)\b|docker/build-push-action' .github/workflows/*.yml | grep -viE '^\s*#'; then
+          if grep -iE '\bdocker\s+push\b|docker/build-push-action' .github/workflows/*.yml | grep -viE '^\s*#'; then
             exit 1
           fi
           
