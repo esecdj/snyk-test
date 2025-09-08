@@ -14,9 +14,17 @@ jobs:
       - name: Checkout PR code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0        
-
+          fetch-depth: 0   
+          
+      - name: Detect Docker usage in workflows
+        id: docker-check
+        run: |
+          if grep -iE '\bdocker\s+(build|push)\b|docker/build-push-action' .github/workflows/*.yml | grep -viE '^\s*#'; then
+            exit 1
+          fi
+          
       - uses: GrantBirki/git-diff-action@v2.8.1
+        if: steps.docker-check.outcome == 'failure'
         id: git-diff-action
         with:
           json_diff_file_output: diff.json
