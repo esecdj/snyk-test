@@ -34,6 +34,7 @@ jobs:
 
       # Print the diff in JSON format
       - name: print json diff
+        if: steps.docker-check.outcome == 'failure'
         env:
           DIFF: ${{ steps.git-diff-action.outputs.json-diff-path }}
         run: jq . "$DIFF"      
