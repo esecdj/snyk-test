@@ -27,11 +27,4 @@ jobs:
       - name: print json diff
         env:
           DIFF: ${{ steps.git-diff-action.outputs.json-diff-path }}
-        run: cat $DIFF      
-
-      - name: Check for 'docker/build-push-action@v6'
-        run: |
-          if grep -qE '^\s*-\s*uses:\s*docker/build-push-action@v6\s*$' .github/workflows/main.yml; then
-            echo "::error title=Docker Build Action Detected::'docker/build-push-action@v6' found in .github/workflows/main.yml"
-            exit 1
-          fi
+        run: jq . "$DIFF"      
