@@ -30,7 +30,7 @@ jobs:
     - name: Run Snyk Import
       run: |
          echo ${{ github.event.repository.default_branch }}
-
+         
     - name: Echo Stuff
       run: |
          echo docker build

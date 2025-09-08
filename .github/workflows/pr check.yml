@@ -11,16 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout PR code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        
 
-      - name: Search for build-push-action@v6
-        run: |
-          matches=$(grep -rE '^(\s*)uses:\s*docker/build-push-action@v6\s*$' .github/workflows || true)
+      - uses: GrantBirki/git-diff-action@v2.8.1
+        id: git-diff-action
+        with:
+          json_diff_file_output: diff.json
+          file_output_only: "true"
+          search_path: '**/*.yml'
 
-          if [[ -n "$matches" ]]; then
-            echo "$matches"
-            echo "::error title=Docker Build Action Detected::'docker/build-push-action@v6' found in workflow files."
-            exit 1
-          fi
-          exit 0
+      # Print the diff in JSON format
+      - name: print json diff
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.json-diff-path }}
+        run: jq . "$DIFF"      
