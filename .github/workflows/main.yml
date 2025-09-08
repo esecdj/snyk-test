@@ -29,12 +29,11 @@ jobs:
          
     - name: Run Snyk Import
       run: |
-         echo ${{ github.event.repository.default_branch }}
-
-    - name: Git Diff
-      run: |
-         git diff    
+         echo ${{ github.event.repository.default_branch }}  
           
-    - uses: docker/build-push-action@v5
-    - uses: whoan/docker-build-with-cache-action@v6
-    - uses: ./.github/actions/snyk-docker-action
+
+    - name: Echo Stuff
+      run: |
+         echo docker build
+         echo docker push
+         
