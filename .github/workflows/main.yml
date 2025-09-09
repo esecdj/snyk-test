@@ -36,3 +36,6 @@ jobs:
          echo docker build
          echo docker/build-push-action
          echo docker push
+
+         echo docker push
+         echo snyk-docker-action
