@@ -95,7 +95,7 @@ jobs:
             type=$(echo "$line" | jq -r '.type')
             content=$(echo "$line" | jq -r '.content')
           
-            if [[ "$type" == "AddedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+push ]]; then
+            if [[ "$type" == "AddedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+push || "$content" =~ docker/build-push-action ]]; then
               violation_found=1
             elif [[ "$type" == "UnchangedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+push || "$content" =~ docker/build-push-action ]]; then
               violation_found=1
