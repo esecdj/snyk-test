@@ -16,6 +16,10 @@ jobs:
         with:
           fetch-depth: 0   
           
+      - name: What code
+        run: |
+          ls
+          
       - name: docker use check
         id: docker-check
         continue-on-error: true
