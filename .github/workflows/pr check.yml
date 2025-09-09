@@ -19,7 +19,7 @@ jobs:
       - name: What code
         run: |
           ls -a
-          cd ./github/workflows
+          cd .github/workflows
           cat main.yml
           
       - name: docker use check
