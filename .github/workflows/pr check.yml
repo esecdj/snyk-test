@@ -39,7 +39,6 @@ jobs:
         if: steps.docker-check.outcome == 'failure'
         run: |
           set -e
-          git fetch --unshallow || true
           git fetch origin main
           changed_files=$(git diff --name-only origin/main..HEAD -- '.github/workflows/*.yml')
           
