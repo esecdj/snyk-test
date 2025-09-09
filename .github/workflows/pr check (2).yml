@@ -1,0 +1,139 @@
+# .github/workflows/monitor-docker-build-usage.yml
+name: Detect Docker Build Action Usage
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  detect-docker-build-action:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   
+          
+      - name: What code
+        run: |
+          ls -a
+          cd .github/workflows
+          cat main.yml
+          
+      - name: docker use check
+        id: docker-check
+        continue-on-error: true
+        run: |
+          if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
+            exit 1
+          fi
+      - name: git diff
+        id: diff-check
+        continue-on-error: true
+        if: steps.docker-check.outcome == 'failure'
+        run: |
+          set -e
+                    
+          changed_files=$(git diff --name-only origin/main...HEAD -- '.github/workflows/*.yml')
+          
+          if [ -z "$changed_files" ]; then
+            echo "No workflow files changed"
+            echo "[]" > violations.json
+            exit 0
+          fi
+          
+          echo "[" > violations.json
+          first=true
+          
+          for file in $changed_files; do
+            # Use git diff with large context and capture all lines (+, -, and unchanged)
+            git diff --unified=10000 origin/main...HEAD -- "$file" | while IFS= read -r line; do
+              # Determine line type for JSON
+              if [[ "$line" =~ ^\+\+ ]]; then
+                # Skip git diff metadata lines starting with ++
+                continue
+              elif [[ "$line" =~ ^@@ ]]; then
+                # Skip hunk headers
+                continue         
+              elif [[ "$line" =~ ^\+ ]]; then
+                type="AddedLine"
+                content="${line:1}"
+              elif [[ "$line" =~ ^\- ]]; then
+                type="DeletedLine"
+                content="${line:1}"
+              elif [[ "$line" =~ ^\  ]]; then
+                type="UnchangedLine"
+                content="${line:1}"
+              else
+                # Other lines (e.g., diff command output), skip
+                continue
+              fi
+          
+              # JSON escape content
+              esc_content=$(printf '%s' "$content" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+          
+              # Output JSON entry
+              if [ "$first" = false ]; then
+                echo "," >> violations.json
+              else
+                first=false
+              fi
+              echo "{\"file\": \"$file\", \"type\": \"$type\", \"content\": $esc_content}" >> violations.json
+            done
+          done
+          
+          echo "]" >> violations.json
+          jq . violations.json
+        shell: bash
+
+      - name: Check JSON
+        id: json-check
+        continue-on-error: true
+        run: |
+          set -e
+          
+          violation_found=0
+          first=true
+          echo "[" > docker_violations.json
+          
+          jq -c '.[]' violations.json | while read -r line; do
+            type=$(echo "$line" | jq -r '.type')
+            content=$(echo "$line" | jq -r '.content')
+            if [[ "$content" =~ ^[[:space:]]+-[[:space:]]+name ]]; then
+              continue
+            fi
+            if [[ "$type" == "AddedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+[Pp]ush || "$content" =~ docker/build-push-action ]]; then
+              violation_found=1
+            elif [[ "$type" == "UnchangedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+[Pp]ush || "$content" =~ docker/build-push-action ]]; then
+              violation_found=1
+            elif [[ "$type" == "DeletedLine" ]] && [[ "$content" =~ snyk-docker-action ]]; then
+              violation_found=1
+            fi
+          
+            if [[ "$violation_found" -eq 1 ]]; then
+              if [ "$first" = false ]; then
+                echo "," >> docker_violations.json
+              else
+                first=false
+              fi
+              echo "$line" >> docker_violations.json
+              violation_found=0
+            fi
+          done
+          
+          echo "]" >> docker_violations.json
+          
+          if [ -s docker_violations.json ] && [[ $(jq length docker_violations.json) -gt 0 ]]; then
+            echo "Violations detected:"
+            exit 1
+          else
+            echo "No violations detected."
+            exit 0
+          fi
+        shell: bash
+
+      - name: Print violations JSON 
+        if: steps.json-check.outcome == 'failure' 
+        run: jq . docker_violations.json       
