@@ -51,6 +51,9 @@ jobs:
               elif [[ "$line" =~ ^@@ ]]; then
                 # Skip hunk headers
                 continue
+              elif [[ "$line" =~ ^-name ]]; then
+                # Skip -name
+                continue              
               elif [[ "$line" =~ ^\+ ]]; then
                 type="AddedLine"
                 content="${line:1}"
