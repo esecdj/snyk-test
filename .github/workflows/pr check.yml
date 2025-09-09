@@ -28,13 +28,12 @@ jobs:
         if: steps.docker-check.outcome == 'failure'
         id: git-diff-action
         with:
-          json_diff_file_output: diff.json
+          raw_diff_file_output: diff.txt
           file_output_only: "true"
           search_path: '**/*.yml'
 
       # Print the diff in JSON format
-      - name: print json diff
-        if: steps.docker-check.outcome == 'failure'
+      - name: print raw diff
         env:
-          DIFF: ${{ steps.git-diff-action.outputs.json-diff-path }}
-        run: jq . "$DIFF"      
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        run: cat $DIFF    
