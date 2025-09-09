@@ -27,7 +27,7 @@ jobs:
           
       - name: Fetch main branch fully
         run: |
-         git fetch origin main --unshallow || git fetch origin main     
+         git fetch origin main
          
       - name: git diff
         id: diff-check
