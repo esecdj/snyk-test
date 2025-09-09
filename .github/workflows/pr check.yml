@@ -25,7 +25,7 @@ jobs:
           fi
       - name: git diff
         id: diff-check
-#        continue-on-error: true
+        continue-on-error: true
         if: steps.docker-check.outcome == 'failure'
         run: |
           set -e
@@ -81,6 +81,28 @@ jobs:
           echo "]" >> violations.json
         shell: bash
 
-      - name: Print violations JSON
-#        if: steps.diff-check.outcome == 'failure'
-        run: jq . violations.json
+      - name: Check JSON
+        continue-on-error: true
+        run: |
+          set -e
+          
+          jq -e '
+            any(.[]; (
+              (.type == "AddedLine" and (.content | test("docker push"; "i"))) or
+              (.type == "UnchangedLine" and (.content | test("docker push|docker/build-push-action"; "i"))) or
+              (.type == "DeletedLine" and (.content | test("snyk-docker-action"; "i"))) or
+              (.type == "AddedLine" and (.content | test("docker/build-push-action"; "i")))
+            ))
+          ' violations.json
+          
+          if [ $? -eq 0 ]; then
+            echo "Violation detected!"
+            exit 1
+          else
+            echo "No violations found."
+            exit 0
+          fi
+        shell: bash
+
+     - name: Print violations JSON 
+       if: steps.diff-check.outcome == 'failure' run: jq . violations.json       
