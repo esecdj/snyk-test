@@ -10,22 +10,25 @@ jobs:
   detect-docker-build-action:
     runs-on: ubuntu-latest
 
-    steps:
+    steps:  
+    
+      - name: docker use check
+        id: docker-check
+        continue-on-error: true
+        run: |          
+          git fetch origin/main
+          git switch origin/main
+          if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
+            exit 1
+          fi
+          echo 
+          
       - name: Checkout PR code
         uses: actions/checkout@v5
         with:
           fetch-depth: 0   
-          ref: ${{ github.head_ref }}    
-         
-#      - name: docker use check
-#        id: docker-check
-#        continue-on-error: true
-#        run: |
-#          if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
-#            exit 1
-#          fi
-#          echo 
-         
+          ref: ${{ github.head_ref }}  
+          
       - name: git diff
         id: diff-check
         continue-on-error: true
