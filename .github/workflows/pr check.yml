@@ -11,13 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:  
-    
+
+      - name: Checkout PR code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 
+          
       - name: docker use check
         id: docker-check
         continue-on-error: true
         run: |          
-          git fetch origin/main
-          git checkout origin/main
           if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
             exit 1
           fi
