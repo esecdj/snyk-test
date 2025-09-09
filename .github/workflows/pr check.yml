@@ -29,43 +29,59 @@ jobs:
         if: steps.docker-check.outcome == 'failure'
         run: |
           set -e
-      
+          
           git fetch origin main --depth=1
+          
           changed_files=$(git diff --name-only origin/main...HEAD -- '.github/workflows/*.yml')
-      
+          
           if [ -z "$changed_files" ]; then
             echo "No workflow files changed"
             echo "[]" > violations.json
             exit 0
           fi
-      
-          violation_found=0
+          
           echo "[" > violations.json
           first=true
-      
+          
           for file in $changed_files; do
+            # Use git diff with large context and capture all lines (+, -, and unchanged)
             git diff --unified=10000 origin/main...HEAD -- "$file" | while IFS= read -r line; do
-              if echo "$line" | grep -qE '^\+[^+]' && echo "$line" | grep -qiE '\bdocker\s+push\b|docker/build-push-action'; then
-                [ "$first" = false ] && echo "," >> violations.json || first=false
-                echo "{\"file\": \"$file\", \"type\": \"AddedLine\", \"content\": \"${line#?}\" }" >> violations.json
-                violation_found=1
-              elif echo "$line" | grep -qE '^ ' && echo "$line" | grep -qiE '\bdocker\s+push\b|docker/build-push-action'; then
-                [ "$first" = false ] && echo "," >> violations.json || first=false
-                echo "{\"file\": \"$file\", \"type\": \"UnchangedLine\", \"content\": \"${line#?}\" }" >> violations.json
-                violation_found=1
-              elif echo "$line" | grep -qE '^\-' && echo "$line" | grep -qiE 'snyk-docker-action'; then
-                [ "$first" = false ] && echo "," >> violations.json || first=false
-                echo "{\"file\": \"$file\", \"type\": \"DeletedLine\", \"content\": \"${line#?}\" }" >> violations.json
-                violation_found=1
+              # Determine line type for JSON
+              if [[ "$line" =~ ^\+\+ ]]; then
+                # Skip git diff metadata lines starting with ++
+                continue
+              elif [[ "$line" =~ ^@@ ]]; then
+                # Skip hunk headers
+                continue
+              elif [[ "$line" =~ ^\+ ]]; then
+                type="AddedLine"
+                content="${line:1}"
+              elif [[ "$line" =~ ^\- ]]; then
+                type="DeletedLine"
+                content="${line:1}"
+              elif [[ "$line" =~ ^\  ]]; then
+                type="UnchangedLine"
+                content="${line:1}"
+              else
+                # Other lines (e.g., diff command output), skip
+                continue
               fi
+          
+              # JSON escape content
+              esc_content=$(printf '%s' "$content" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+          
+              # Output JSON entry
+              if [ "$first" = false ]; then
+                echo "," >> violations.json
+              else
+                first=false
+              fi
+              echo "{\"file\": \"$file\", \"type\": \"$type\", \"content\": $esc_content}" >> violations.json
             done
           done
-      
+          
           echo "]" >> violations.json
-      
-          if [ "$violation_found" -eq 1 ]; then
-            exit 1
-          fi
+        shell: bash
 
       - name: Print violations JSON
         if: steps.diff-check.outcome == 'failure'
