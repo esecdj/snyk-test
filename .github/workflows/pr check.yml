@@ -15,6 +15,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0   
+
           ref: ${{ github.head_ref }}
           
 
@@ -30,6 +31,9 @@ jobs:
           ls -a
           cd .github/workflows
           cat main.yml
+
+          ref: ${{ github.head_ref }} 
+
           
       - name: docker use check
         id: docker-check
@@ -38,13 +42,18 @@ jobs:
           if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
             exit 1
           fi
+          
+      - name: Fetch main branch fully
+        run: |
+         git fetch origin main --unshallow || git fetch origin main     
+         
       - name: git diff
         id: diff-check
         continue-on-error: true
         if: steps.docker-check.outcome == 'failure'
         run: |
           set -e
-                    
+
           changed_files=$(git diff --name-only origin/main...HEAD -- '.github/workflows/*.yml')
           
           if [ -z "$changed_files" ]; then
