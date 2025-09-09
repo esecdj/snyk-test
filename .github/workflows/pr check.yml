@@ -16,24 +16,57 @@ jobs:
         with:
           fetch-depth: 0   
           
-      - name: Detect Docker usage in workflows
+      - name: docker use check
         id: docker-check
         continue-on-error: true
         run: |
           if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
             exit 1
           fi
-          
-      - uses: GrantBirki/git-diff-action@v2.8.1
+      - name: git diff
+        id: diff-check
+        continue-on-error: true
         if: steps.docker-check.outcome == 'failure'
-        id: git-diff-action
-        with:
-          raw_diff_file_output: diff.txt
-          file_output_only: "true"
-          search_path: '**/*.yml'
+        run: |
+          set -e
+      
+          git fetch origin main --depth=1
+          changed_files=$(git diff --name-only origin/main...HEAD -- '.github/workflows/*.yml')
+      
+          if [ -z "$changed_files" ]; then
+            echo "No workflow files changed"
+            echo "[]" > violations.json
+            exit 0
+          fi
+      
+          violation_found=0
+          echo "[" > violations.json
+          first=true
+      
+          for file in $changed_files; do
+            git diff --unified=10000 origin/main...HEAD -- "$file" | while IFS= read -r line; do
+              if echo "$line" | grep -qE '^\+[^+]' && echo "$line" | grep -qiE '\bdocker\s+push\b|docker/build-push-action'; then
+                [ "$first" = false ] && echo "," >> violations.json || first=false
+                echo "{\"file\": \"$file\", \"type\": \"AddedLine\", \"content\": \"${line#?}\" }" >> violations.json
+                violation_found=1
+              elif echo "$line" | grep -qE '^ ' && echo "$line" | grep -qiE '\bdocker\s+push\b|docker/build-push-action'; then
+                [ "$first" = false ] && echo "," >> violations.json || first=false
+                echo "{\"file\": \"$file\", \"type\": \"UnchangedLine\", \"content\": \"${line#?}\" }" >> violations.json
+                violation_found=1
+              elif echo "$line" | grep -qE '^\-' && echo "$line" | grep -qiE 'snyk-docker-action'; then
+                [ "$first" = false ] && echo "," >> violations.json || first=false
+                echo "{\"file\": \"$file\", \"type\": \"DeletedLine\", \"content\": \"${line#?}\" }" >> violations.json
+                violation_found=1
+              fi
+            done
+          done
+      
+          echo "]" >> violations.json
+      
+          if [ "$violation_found" -eq 1 ]; then
+            exit 1
+          fi
 
-      # Print the diff in JSON format
-      - name: print raw diff
-        env:
-          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        run: cat $DIFF    
+      - name: Print violations JSON
+        if: steps.diff-check.outcome == 'failure'
+        run: jq . violations.json
