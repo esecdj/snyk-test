@@ -34,3 +34,4 @@ jobs:
     - name: Docker Push test Stuff
       run: |
          echo docker build
+         echo docker push

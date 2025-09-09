@@ -15,6 +15,15 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0   
+          ref: ${{ github.head_ref }}
+          
+
+      - name: Show current commit and branch
+        run: |
+            echo "Current commit:"
+            git rev-parse HEAD
+            echo "Current branch:"
+            git branch --show-current || echo "detached HEAD"
           
       - name: What code
         run: |
