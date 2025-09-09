@@ -25,7 +25,7 @@ jobs:
           fi
       - name: git diff
         id: diff-check
-        continue-on-error: true
+#        continue-on-error: true
         if: steps.docker-check.outcome == 'failure'
         run: |
           set -e
