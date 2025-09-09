@@ -19,15 +19,18 @@ jobs:
           
       - name: Fetch main branch fully
         run: |
-         git fetch origin main
+          git fetch origin main    
           
       - name: docker use check
         id: docker-check
         continue-on-error: true
         run: |
+          current_branch=$(git branch --show-current)
+          git checkout origin/main
           if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
             exit 1
           fi
+          git checkout "$current_branch"
          
       - name: git diff
         id: diff-check
