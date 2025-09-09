@@ -87,24 +87,44 @@ jobs:
         run: |
           set -e
           
-          jq -e '
-            any(.[]; (
-              (.type == "AddedLine" and (.content | test("docker push"; "i"))) or
-              (.type == "UnchangedLine" and (.content | test("docker push|docker/build-push-action"; "i"))) or
-              (.type == "DeletedLine" and (.content | test("snyk-docker-action"; "i"))) or
-              (.type == "AddedLine" and (.content | test("docker/build-push-action"; "i")))
-            ))
-          ' violations.json
+          violation_found=0
+          first=true
+          echo "[" > docker_violations.json
           
-          if [ $? -eq 0 ]; then
-            echo "Violation detected!"
+          jq -c '.[]' violations.json | while read -r line; do
+            type=$(echo "$line" | jq -r '.type')
+            content=$(echo "$line" | jq -r '.content')
+          
+            if [[ "$type" == "AddedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+push ]]; then
+              violation_found=1
+            elif [[ "$type" == "UnchangedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+push || "$content" =~ docker/build-push-action ]]; then
+              violation_found=1
+            elif [[ "$type" == "DeletedLine" ]] && [[ "$content" =~ snyk-docker-action ]]; then
+              violation_found=1
+            fi
+          
+            if [[ "$violation_found" -eq 1 ]]; then
+              if [ "$first" = false ]; then
+                echo "," >> docker_violations.json
+              else
+                first=false
+              fi
+              echo "$line" >> docker_violations.json
+              violation_found=0
+            fi
+          done
+          
+          echo "]" >> docker_violations.json
+          
+          if [ -s docker_violations.json ] && [[ $(jq length docker_violations.json) -gt 0 ]]; then
+            echo "Violations detected:"
             exit 1
           else
-            echo "No violations found."
+            echo "No violations detected."
             exit 0
           fi
         shell: bash
 
       - name: Print violations JSON 
         if: steps.json-check.outcome == 'failure' 
-        run: jq . violations.json       
+        run: jq . docker_violations.json       
