@@ -50,10 +50,7 @@ jobs:
                 continue
               elif [[ "$line" =~ ^@@ ]]; then
                 # Skip hunk headers
-                continue
-              elif [[ "$line" =~ ^-name ]]; then
-                # Skip -name
-                continue              
+                continue         
               elif [[ "$line" =~ ^\+ ]]; then
                 type="AddedLine"
                 content="${line:1}"
@@ -99,9 +96,9 @@ jobs:
             type=$(echo "$line" | jq -r '.type')
             content=$(echo "$line" | jq -r '.content')
           
-            if [[ "$type" == "AddedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+push || "$content" =~ docker/build-push-action ]]; then
+            if [[ "$type" == "AddedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+[Pp]ush || "$content" =~ docker/build-push-action ]]; then
               violation_found=1
-            elif [[ "$type" == "UnchangedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+push || "$content" =~ docker/build-push-action ]]; then
+            elif [[ "$type" == "UnchangedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+[Pp]ush || "$content" =~ docker/build-push-action ]]; then
               violation_found=1
             elif [[ "$type" == "DeletedLine" ]] && [[ "$content" =~ snyk-docker-action ]]; then
               violation_found=1
