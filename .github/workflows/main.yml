@@ -34,4 +34,4 @@ jobs:
     - name: Echo Stuff
       run: |
          echo docker build
-         echo snyk-docker-action
+         echo docker/build-push-action
