@@ -82,5 +82,5 @@ jobs:
         shell: bash
 
       - name: Print violations JSON
-        if: steps.diff-check.outcome == 'failure'
+#        if: steps.diff-check.outcome == 'failure'
         run: jq . violations.json
