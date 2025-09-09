@@ -26,7 +26,6 @@ jobs:
         continue-on-error: true
         run: |
           current_branch=$(git branch --show-current)
-          echo $current_branch
           git checkout origin/main
           if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
             exit 1
