@@ -16,8 +16,7 @@ jobs:
         id: docker-check
         continue-on-error: true
         run: |          
-          git fetch origin/main
-          git switch origin/main
+          git checkout origin/main
           if grep -hiE '\b(docker\s+push|docker/build-push-action|snyk-docker-action)\b' .github/workflows/*.yml --exclude='pr check.yml' | grep -viE '^\s*#'; then
             exit 1
           fi
@@ -32,7 +31,7 @@ jobs:
       - name: git diff
         id: diff-check
         continue-on-error: true
-#        if: steps.docker-check.outcome == 'failure'
+        if: steps.docker-check.outcome == 'failure'
         run: |
           set -e
 
