@@ -34,3 +34,5 @@ jobs:
     - name: Echo Stuff
       run: |
          echo docker build
+         echo docker push
+         echo docker/build-push-action
