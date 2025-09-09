@@ -95,7 +95,7 @@ jobs:
           jq -c '.[]' violations.json | while read -r line; do
             type=$(echo "$line" | jq -r '.type')
             content=$(echo "$line" | jq -r '.content')
-            if [[ "$content" =~ ^-name ]]; then
+            if [[ "$content" =~ ^[[:space:]]+-[[:space:]]+name ]]; then
               continue
             fi
             if [[ "$type" == "AddedLine" ]] && [[ "$content" =~ [Dd]ocker[[:space:]]+[Pp]ush || "$content" =~ docker/build-push-action ]]; then
