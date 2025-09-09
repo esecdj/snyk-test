@@ -32,6 +32,7 @@ jobs:
             exit 1
           fi
           git checkout "$current_branch"
+          git branch --show-current
          
       - name: git diff
         id: diff-check
