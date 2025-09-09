@@ -82,6 +82,7 @@ jobs:
           done
           
           echo "]" >> violations.json
+          jq . violations.json
         shell: bash
 
       - name: Check JSON
