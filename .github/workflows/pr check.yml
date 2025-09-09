@@ -33,7 +33,7 @@ jobs:
         run: |
           set -e
 
-          changed_files=$(git diff --name-only origin/main... -- '.github/workflows/*.yml')
+          changed_files=$(git diff --name-only origin/main...HEAD -- '.github/workflows/*.yml')
           
           if [ -z "$changed_files" ]; then
             echo "No workflow files changed"
